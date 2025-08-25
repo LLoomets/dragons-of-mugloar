@@ -27,4 +27,9 @@ public class GameService {
         ResponseEntity<List<Message>> response = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Message>>() {});
         return response.getBody();
     }
+
+    public String solveMessage(String gameId, String adId) {
+        String url = baseURL + "/" + gameId + "/solve/" + adId;
+        return restTemplate.postForObject(url, null, String.class);
+    }
 }

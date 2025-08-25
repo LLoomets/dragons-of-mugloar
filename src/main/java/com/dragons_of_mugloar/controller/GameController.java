@@ -27,4 +27,9 @@ public class GameController {
     public List<Message> getMessages(@PathVariable String gameId) {
         return gameService.getMessages(gameId);
     }
+
+    @GetMapping("/{gameId}/solve/{adId}")
+    public String solveMessage(@PathVariable String gameId, @PathVariable String adId) {
+        return gameService.solveMessage(gameId, adId);
+    }
 }
