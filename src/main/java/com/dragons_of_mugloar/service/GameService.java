@@ -21,15 +21,4 @@ public class GameService {
         String url = baseURL + "/game/start";
         return restTemplate.postForObject(url, null, Game.class);
     }
-
-    public List<Message> getMessages(String gameId) {
-        String url = baseURL +"/" + gameId + "/messages";
-        ResponseEntity<List<Message>> response = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Message>>() {});
-        return response.getBody();
-    }
-
-    public String solveMessage(String gameId, String adId) {
-        String url = baseURL + "/" + gameId + "/solve/" + adId;
-        return restTemplate.postForObject(url, null, String.class);
-    }
 }
