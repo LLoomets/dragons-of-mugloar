@@ -2,8 +2,10 @@ package com.dragons_of_mugloar.service;
 
 import com.dragons_of_mugloar.model.Game;
 import com.dragons_of_mugloar.model.Message;
+import com.dragons_of_mugloar.model.PurchaseResult;
 import com.dragons_of_mugloar.model.SolvedMessage;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 
@@ -12,10 +14,12 @@ public class GameLoopService {
 
     private GameService gameService;
     private MessageService messageService;
+    private ItemService itemService;
 
-    public GameLoopService(GameService gameService, MessageService messageService) {
+    public GameLoopService(GameService gameService, MessageService messageService, ItemService itemService) {
         this.gameService = gameService;
         this.messageService = messageService;
+        this.itemService = itemService;
     }
 
     public void playGame() {
@@ -23,28 +27,44 @@ public class GameLoopService {
         System.out.println("Game started: " + game.getGameId());
 
         while (game.getLives() > 0) {
-            List<Message> messages = messageService.getMessages(game.getGameId());
+            try {
+                List<Message> messages = messageService.getMessages(game.getGameId());
 
-            if (messages == null || messages.isEmpty()) {
-                System.out.println("No messages found");
-                return;
+                if (messages == null || messages.isEmpty()) {
+                    System.out.println("No messages found");
+                    return;
+                }
+
+                if (game.getLives() < 3 && game.getGold() >= 50) {
+                    System.out.println("Buying healing potion...");
+                    PurchaseResult purchase = itemService.buyItem(game.getGameId(), "hpot");
+
+                    System.out.println("Purchase success: " + purchase.isShoppingSuccess() + ", gold left: " + purchase.getGold());
+                    game.setGold(purchase.getGold());
+                    game.setLives(purchase.getLives());
+
+                    messages = messageService.getMessages(game.getGameId());
+                }
+
+                Message chosenMessage = messageService.chooseSafeMessage(messages);
+                int riskLevel = messageService.getRiskLevel(chosenMessage);
+                int rewardValue = chosenMessage.getReward();
+                System.out.println("Trying to complete: " + chosenMessage.getMessage() + " (risk: " + riskLevel + ", reward: " + rewardValue + ")");
+
+                SolvedMessage result = messageService.solveMessage(game.getGameId(), chosenMessage.getAdId());
+                System.out.printf("Result: success=%b, lives=%d, gold=%d, score=%d, highScore=%d, turn=%d, message=%s%n",
+                        result.isSuccess(), result.getLives(), result.getGold(), result.getScore(), result.getHighScore(), result.getTurn(), result.getMessage());
+
+                game.setScore(result.getScore());
+                game.setHighScore(result.getHighScore());
+                game.setLives(result.getLives());
+                game.setGold(result.getGold());
+
+                messageService.getMessages(game.getGameId());
+            } catch (Exception e) {
+                System.out.println("Game over. Final score: " + game.getScore());
+                break;
             }
-
-            Message chosenMessage = messageService.chooseSafeMessage(messages);
-            int riskLevel = messageService.getRiskLevel(chosenMessage);
-            int rewardValue = chosenMessage.getReward();
-            System.out.println("Trying to complete: " + chosenMessage.getMessage() + " (risk: " + riskLevel + ", reward: " + rewardValue + ")");
-
-            SolvedMessage result = messageService.solveMessage(game.getGameId(), chosenMessage.getAdId());
-            System.out.printf("Result: success=%b, lives=%d, gold=%d, score=%d, highScore=%d, turn=%d, message=%s%n",
-                    result.isSuccess(), result.getLives(), result.getGold(), result.getScore(), result.getHighScore(), result.getTurn(), result.getMessage());
-
-            game.setScore(result.getScore());
-            game.setHighScore(result.getHighScore());
-            game.setLives(result.getLives());
-            game.setGold(result.getGold());
-
         }
-        System.out.println("Game over. Final score: " + game.getScore());
     }
 }
