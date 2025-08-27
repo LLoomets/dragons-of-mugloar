@@ -19,7 +19,7 @@ public class MessageService {
 
     public List<Message> getMessages(String gameId) {
         String url = baseURL +"/" + gameId + "/messages";
-        ResponseEntity<List<Message>> response = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Message>>() {});
+        ResponseEntity<List<Message>> response = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<>() {});
         return response.getBody();
     }
 
@@ -29,9 +29,19 @@ public class MessageService {
     }
 
     public Message chooseSafeMessage(List<Message> messages) {
-        return messages.stream()
-                .min(Comparator.comparingInt(this::getRiskLevel))
-                .orElse(null);
+        int minRisk = messages.stream()
+                .mapToInt(this::getRiskLevel)
+                .min()
+                .orElse(100);
+
+        List<Message> safestMessage = messages.stream()
+                .filter(m -> getRiskLevel(m) == minRisk)
+                .toList();
+
+        return safestMessage.stream()
+                .max(Comparator.comparingInt(Message::getReward))
+                .orElse(safestMessage.getFirst());
+
     }
 
     public int getRiskLevel(Message message) {
