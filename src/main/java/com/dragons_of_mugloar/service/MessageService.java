@@ -1,6 +1,7 @@
 package com.dragons_of_mugloar.service;
 
 import com.dragons_of_mugloar.model.Message;
+import com.dragons_of_mugloar.model.SolvedMessage;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -23,9 +24,9 @@ public class MessageService {
         return response.getBody();
     }
 
-    public String solveMessage(String gameId, String adId) {
+    public SolvedMessage solveMessage(String gameId, String adId) {
         String url = baseURL + "/" + gameId + "/solve/" + adId;
-        return restTemplate.postForObject(url, null, String.class);
+        return restTemplate.postForObject(url, null, SolvedMessage.class);
     }
 
     public Message chooseSafeMessage(List<Message> messages) {

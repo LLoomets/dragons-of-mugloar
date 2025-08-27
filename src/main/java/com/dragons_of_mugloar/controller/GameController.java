@@ -14,34 +14,15 @@ import java.util.List;
 @RestController
 public class GameController {
 
-    private GameService gameService;
-    private MessageService messageService;
     private GameLoopService gameLoopService;
 
-    public GameController(GameService gameService, MessageService messageService, GameLoopService gameLoopService) {
-        this.gameService = gameService;
-        this.messageService = messageService;
+    public GameController(GameLoopService gameLoopService) {
         this.gameLoopService = gameLoopService;
-    }
-
-//    @GetMapping("/start")
-//    public Game startGame() {
-//        return gameService.startGame();
-//    }
-
-    @GetMapping("/{gameId}/messages")
-    public List<Message> getMessages(@PathVariable String gameId) {
-        return messageService.getMessages(gameId);
-    }
-
-    @GetMapping("/{gameId}/solve/{adId}")
-    public String solveMessage(@PathVariable String gameId, @PathVariable String adId) {
-        return messageService.solveMessage(gameId, adId);
     }
 
     @GetMapping("/start")
     public String playGame() {
-        gameLoopService.playGame();
-        return "Game started. check logs";
+        new Thread(() -> gameLoopService.playGame()).start();
+        return "Game started in background. Check logs for progress.";
     }
 }
