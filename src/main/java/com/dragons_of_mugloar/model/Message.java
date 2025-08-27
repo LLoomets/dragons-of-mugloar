@@ -8,7 +8,7 @@ import lombok.Setter;
 public class Message {
     private String adId;
     private String message;
-    private String reward;
+    private int reward;
     private int expiresIn;
     private String probability;
 }

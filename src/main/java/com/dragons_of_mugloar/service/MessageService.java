@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -25,5 +26,29 @@ public class MessageService {
     public String solveMessage(String gameId, String adId) {
         String url = baseURL + "/" + gameId + "/solve/" + adId;
         return restTemplate.postForObject(url, null, String.class);
+    }
+
+    public Message chooseSafeMessage(List<Message> messages) {
+        return messages.stream()
+                .min(Comparator.comparingInt(this::getRiskLevel))
+                .orElse(null);
+    }
+
+    public int getRiskLevel(Message message) {
+        if (message.getProbability() == null) return 100;
+
+        return switch (message.getProbability()) {
+            case "Sure thing" -> 1;
+            case "Piece of cake" -> 5;
+            case "Walk in the park" -> 10;
+            case "Quite likely" -> 20;
+            case "Hmmm...." -> 40;
+            case "Gamble" -> 50;
+            case "Risky" -> 60;
+            case "Playing with fire" -> 70;
+            case "Rather detrimental" -> 80;
+            case "Impossible", "Suicide mission" -> 100;
+            default -> 100;
+        };
     }
 }

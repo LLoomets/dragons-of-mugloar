@@ -29,10 +29,12 @@ public class GameLoopService {
                 return;
             }
 
-            Message firstMessage = messages.getFirst();
-            System.out.println("Trying to complete: " + firstMessage.getMessage());
+            Message chosenMessage = messageService.chooseSafeMessage(messages);
+            int riskLevel = messageService.getRiskLevel(chosenMessage);
+            int rewardValue = chosenMessage.getReward();
+            System.out.println("Trying to complete: " + chosenMessage.getMessage() + " (risk: " + riskLevel + ", reward: " + rewardValue + ")");
 
-            String result = messageService.solveMessage(game.getGameId(), firstMessage.getAdId());
+            String result = messageService.solveMessage(game.getGameId(), chosenMessage.getAdId());
             System.out.println("Result: " + result);
         }
         System.out.print("Game over. Final score: " + game.getScore());
