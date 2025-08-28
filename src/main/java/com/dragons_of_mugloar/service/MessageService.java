@@ -29,19 +29,22 @@ public class MessageService {
         return restTemplate.postForObject(url, null, SolvedMessage.class);
     }
 
-    public Message chooseSafeMessage(List<Message> messages) {
-        int minRisk = messages.stream()
-                .mapToInt(this::getRiskLevel)
-                .min()
-                .orElse(100);
-
-        List<Message> safestMessage = messages.stream()
-                .filter(m -> getRiskLevel(m) == minRisk)
+    public Message chooseMessage(List<Message> messages) {
+        List<Message> filteredMessages = messages.stream()
+                .filter(m -> !m.getMessage().toLowerCase().contains("steal"))
                 .toList();
 
-        return safestMessage.stream()
-                .max(Comparator.comparingInt(Message::getReward))
-                .orElse(safestMessage.getFirst());
+        if (filteredMessages.isEmpty()) {
+            filteredMessages = messages;
+        }
+
+        return filteredMessages.stream()
+                .max(Comparator.comparingDouble(m -> {
+                    int riskLevel = getRiskLevel(m);
+                    int reward = m.getReward();
+                    return reward/(double) riskLevel;
+                }))
+                .orElse(filteredMessages.getFirst());
 
     }
 

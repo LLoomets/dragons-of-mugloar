@@ -67,19 +67,20 @@ public class GameLoopService {
                         System.out.println("Purchase success: " + purchase.isShoppingSuccess() + ", gold left: " + purchase.getGold());
                         game.setGold(purchase.getGold());
                         game.setLives(purchase.getLives());
+                        game.setLevel(purchase.getLevel());
 
                         messages = messageService.getMessages(game.getGameId());
                     }
                 }
 
-                Message chosenMessage = messageService.chooseSafeMessage(messages);
+                Message chosenMessage = messageService.chooseMessage(messages);
                 int riskLevel = messageService.getRiskLevel(chosenMessage);
                 int rewardValue = chosenMessage.getReward();
                 System.out.println("Trying to complete: " + chosenMessage.getMessage() + " (risk: " + riskLevel + ", reward: " + rewardValue + ")");
 
                 SolvedMessage result = messageService.solveMessage(game.getGameId(), chosenMessage.getAdId());
-                System.out.printf("Result: success=%b, lives=%d, gold=%d, score=%d, highScore=%d, turn=%d, message=%s%n",
-                        result.isSuccess(), result.getLives(), result.getGold(), result.getScore(), result.getHighScore(), result.getTurn(), result.getMessage());
+                System.out.printf("Result: success=%b, lives=%d, level=%d gold=%d, score=%d, highScore=%d, turn=%d, message=%s%n",
+                        result.isSuccess(), result.getLives(), game.getLevel(), result.getGold(), result.getScore(), result.getHighScore(), result.getTurn(), result.getMessage());
 
                 Reputation reputation = reputationService.getReputation(game.getGameId());
                 System.out.printf("Current reputation: people=%d, state=%d, underworld=%d%n", reputation.getPeople(), reputation.getState(), reputation.getUnderworld());
