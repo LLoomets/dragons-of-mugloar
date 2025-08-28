@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
+import java.util.Random;
 
 @Service
 public class GameLoopService {
@@ -34,6 +35,8 @@ public class GameLoopService {
                     return;
                 }
 
+                boolean purchasedThisTurn = false;
+
                 if (game.getLives() < 3 && game.getGold() >= 50) {
                     System.out.println("Buying healing potion...");
                     PurchaseResult purchase = itemService.buyItem(game.getGameId(), "hpot");
@@ -41,8 +44,32 @@ public class GameLoopService {
                     System.out.println("Purchase success: " + purchase.isShoppingSuccess() + ", gold left: " + purchase.getGold());
                     game.setGold(purchase.getGold());
                     game.setLives(purchase.getLives());
+                    purchasedThisTurn = true;
 
                     messages = messageService.getMessages(game.getGameId());
+                }
+
+                if (!purchasedThisTurn && game.getGold() >= 400) {
+                    List<Item> items = itemService.getItems(game.getGameId());
+                    List<Item> affordableItems = items.stream()
+                            .filter(i -> i.getCost() <= game.getGold() && !i.getId().equals("hpot"))
+                            .toList();
+
+                    if (!affordableItems.isEmpty()) {
+                        Random random = new Random();
+
+                        Item itemToBuy = affordableItems.get(random.nextInt(affordableItems.size()));
+                        System.out.println("Buying random item: " + itemToBuy.getName() + " (cost: " + itemToBuy.getCost() + ")");
+
+
+                        PurchaseResult purchase = itemService.buyItem(game.getGameId(), itemToBuy.getId());
+
+                        System.out.println("Purchase success: " + purchase.isShoppingSuccess() + ", gold left: " + purchase.getGold());
+                        game.setGold(purchase.getGold());
+                        game.setLives(purchase.getLives());
+
+                        messages = messageService.getMessages(game.getGameId());
+                    }
                 }
 
                 Message chosenMessage = messageService.chooseSafeMessage(messages);
