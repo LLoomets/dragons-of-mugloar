@@ -1,9 +1,6 @@
 package com.dragons_of_mugloar.service;
 
-import com.dragons_of_mugloar.model.Game;
-import com.dragons_of_mugloar.model.Message;
-import com.dragons_of_mugloar.model.PurchaseResult;
-import com.dragons_of_mugloar.model.SolvedMessage;
+import com.dragons_of_mugloar.model.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -15,11 +12,13 @@ public class GameLoopService {
     private GameService gameService;
     private MessageService messageService;
     private ItemService itemService;
+    private ReputationService reputationService;
 
-    public GameLoopService(GameService gameService, MessageService messageService, ItemService itemService) {
+    public GameLoopService(GameService gameService, MessageService messageService, ItemService itemService, ReputationService reputationService) {
         this.gameService = gameService;
         this.messageService = messageService;
         this.itemService = itemService;
+        this.reputationService = reputationService;
     }
 
     public void playGame() {
@@ -55,12 +54,15 @@ public class GameLoopService {
                 System.out.printf("Result: success=%b, lives=%d, gold=%d, score=%d, highScore=%d, turn=%d, message=%s%n",
                         result.isSuccess(), result.getLives(), result.getGold(), result.getScore(), result.getHighScore(), result.getTurn(), result.getMessage());
 
+                Reputation reputation = reputationService.getReputation(game.getGameId());
+                System.out.printf("Current reputation: people=%d, state=%d, underworld=%d%n", reputation.getPeople(), reputation.getState(), reputation.getUnderworld());
+                System.out.println(" ");
+
                 game.setScore(result.getScore());
                 game.setHighScore(result.getHighScore());
                 game.setLives(result.getLives());
                 game.setGold(result.getGold());
 
-                messageService.getMessages(game.getGameId());
             } catch (Exception e) {
                 System.out.println("Game over. Final score: " + game.getScore());
                 break;
