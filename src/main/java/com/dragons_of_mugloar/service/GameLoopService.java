@@ -35,43 +35,8 @@ public class GameLoopService {
                     return;
                 }
 
-                boolean purchasedThisTurn = false;
-
-                if (game.getLives() < 3 && game.getGold() >= 50) {
-                    System.out.println("Buying healing potion...");
-                    PurchaseResult purchase = itemService.buyItem(game.getGameId(), "hpot");
-
-                    System.out.println("Purchase success: " + purchase.isShoppingSuccess() + ", gold left: " + purchase.getGold());
-                    game.setGold(purchase.getGold());
-                    game.setLives(purchase.getLives());
-                    purchasedThisTurn = true;
-
-                    messages = messageService.getMessages(game.getGameId());
-                }
-
-                if (!purchasedThisTurn && game.getGold() >= 400) {
-                    List<Item> items = itemService.getItems(game.getGameId());
-                    List<Item> affordableItems = items.stream()
-                            .filter(i -> i.getCost() <= game.getGold() && !i.getId().equals("hpot"))
-                            .toList();
-
-                    if (!affordableItems.isEmpty()) {
-                        Random random = new Random();
-
-                        Item itemToBuy = affordableItems.get(random.nextInt(affordableItems.size()));
-                        System.out.println("Buying random item: " + itemToBuy.getName() + " (cost: " + itemToBuy.getCost() + ")");
-
-
-                        PurchaseResult purchase = itemService.buyItem(game.getGameId(), itemToBuy.getId());
-
-                        System.out.println("Purchase success: " + purchase.isShoppingSuccess() + ", gold left: " + purchase.getGold());
-                        game.setGold(purchase.getGold());
-                        game.setLives(purchase.getLives());
-                        game.setLevel(purchase.getLevel());
-
-                        messages = messageService.getMessages(game.getGameId());
-                    }
-                }
+                buyItems(game);
+                messages = messageService.getMessages(game.getGameId());
 
                 Message chosenMessage = messageService.chooseMessage(messages);
                 int riskLevel = messageService.getRiskLevel(chosenMessage);
@@ -97,4 +62,55 @@ public class GameLoopService {
             }
         }
     }
+
+    private void buyItems(Game game) {
+        try {
+            if (game.getLives() < 3 && game.getGold() >= 50) {
+                purchaseItem(game, "hpot");
+                return;
+            }
+            if (game.getScore() > 2000) {
+                if (game.getGold() >= 300) {
+                    purchaseItem(game, "iron");
+                    return;
+                } else if (game.getGold() >= 100) {
+                    purchaseItem(game, "wax");
+                    return;
+                }
+            }
+            if (game.getScore() < 1000) {
+                if (game.getGold() >= 300) {
+                    purchaseItem(game, "ch");
+                    return;
+                } else if (game.getGold() >= 100) {
+                    purchaseItem(game, "wingpot");
+                    return;
+                }
+            }
+            if (game.getGold() >= 300) {
+                purchaseItem(game, "mtrix");
+            } else if (game.getGold() >= 100) {
+                purchaseItem(game, "tricks");
+            }
+        } catch (Exception e) {
+            System.out.println("Error while trying to buy item: " + e.getMessage());
+        }
+    }
+
+    private void purchaseItem(Game game, String itemId) {
+        try {
+            PurchaseResult purchase = itemService.buyItem(game.getGameId(), itemId);
+            if (purchase.isShoppingSuccess()) {
+                game.setGold(purchase.getGold());
+                game.setLives(purchase.getLives());
+                game.setLevel(purchase.getLevel());
+                System.out.printf("Bought %s successfully, gold left: %d%n", itemId, game.getGold());
+            } else {
+                System.out.println("Purchase failed: " + itemId);
+            }
+        } catch (Exception e) {
+            System.out.println("Error buying " + itemId + ": " + e.getMessage());
+        }
+    }
+
 }
