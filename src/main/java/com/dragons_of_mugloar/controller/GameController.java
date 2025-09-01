@@ -1,12 +1,7 @@
 package com.dragons_of_mugloar.controller;
 
-import com.dragons_of_mugloar.model.Game;
-import com.dragons_of_mugloar.model.Message;
 import com.dragons_of_mugloar.service.GameLoopService;
-import com.dragons_of_mugloar.service.GameService;
-import com.dragons_of_mugloar.service.MessageService;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
